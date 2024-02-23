@@ -5,16 +5,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "next dev",
-    "devnet": "NEXT_PUBLIC_CLUSTER=devnet NEXT_PUBLIC_ENDPOINT=https://mango.devnet.rpcpool.com/ NEXT_PUBLIC_GROUP=devnet.2 next dev",
-    "build": "next build",
-    "start": "next start",
-    "prepare": "husky install",
-    "type-check": "tsc --pretty --noEmit",
-    "format": "prettier --write .",
-    "lint": "eslint . --ext ts --ext tsx --ext js --quiet",
-    "lint-staged": "lint-staged --config lint-staged.js",
-    "lint-all": "yarn lint && yarn type-check",
-    "analyze": "ANALYZE=true yarn build"
+    "build": "next --max-old-space-size=8192 build",
+    "start": "next start"
   },
   "dependencies": {
     "@blockworks-foundation/mango-client": "^3.4.0",
