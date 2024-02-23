@@ -38,6 +38,7 @@
     "@solflare-wallet/pfp": "^0.0.6",
     "@solflare-wallet/sdk": "^1.0.10",
     "@tippyjs/react": "^4.2.5",
+    "antd": "4.24.15",
     "big.js": "^6.1.1",
     "bignumber.js": "^9.0.2",
     "bn.js": "^5.1.0",

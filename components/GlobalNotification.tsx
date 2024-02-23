@@ -6,7 +6,7 @@ import useInterval from '../hooks/useInterval'
 import { SECONDS } from '../stores/useMangoStore'
 import { useTranslation } from 'next-i18next'
 
-const connection = new Connection('https://solana-api.projectserum.com/')
+const connection = new Connection('https://api.mainnet-beta.solana.com')
 
 const getRecentPerformance = async (setShow, setTps) => {
   try {

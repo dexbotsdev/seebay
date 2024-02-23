@@ -1,16 +1,8 @@
-import { useCallback, useState } from 'react'
-import Link from 'next/link'
-import { abbreviateAddress } from '../utils/index'
-import useLocalStorageState from '../hooks/useLocalStorageState'
 import MenuItem from './MenuItem'
-import useMangoStore from '../stores/useMangoStore'
 import { ConnectWalletButton } from 'components'
 import NavDropMenu from './NavDropMenu'
-import AccountsModal from './AccountsModal'
-import { DEFAULT_MARKET_KEY, initialMarket } from './SettingsModal'
 import { useTranslation } from 'next-i18next'
 import Settings from './Settings'
-import TradeNavMenu from './TradeNavMenu'
 import {
   CalculatorIcon,
   CurrencyDollarIcon,
@@ -29,27 +21,15 @@ import { useWallet } from '@solana/wallet-adapter-react'
 
 const TopBar = () => {
   const { t } = useTranslation('common')
-  const { publicKey } = useWallet()
-  const mangoAccount = useMangoStore((s) => s.selectedMangoAccount.current)
-  const cluster = useMangoStore((s) => s.connection.cluster)
-  const [showAccountsModal, setShowAccountsModal] = useState(false)
-  const [defaultMarket] = useLocalStorageState(
-    DEFAULT_MARKET_KEY,
-    initialMarket
-  )
-  const isDevnet = cluster === 'devnet'
-
-  const handleCloseAccounts = useCallback(() => {
-    setShowAccountsModal(false)
-  }, [])
+  const { publicKey } = useWallet() 
+  
 
   return (
     <>
       <nav className={`bg-th-bkg-2`}>
         <div className={`px-4 xl:px-6`}>
           <div className={`flex h-14 justify-between`}>
-            <div className={`flex`}>
-              <Link href={defaultMarket.path} shallow={true}>
+            <div className={`flex`}> 
                 <div
                   className={`flex flex-shrink-0 cursor-pointer items-center`}
                 >
@@ -58,13 +38,11 @@ const TopBar = () => {
                     src="/assets/icons/logo.svg"
                     alt="next"
                   />
-                </div>
-              </Link>
+                </div> 
               <div
                 className={`hidden md:ml-4 md:flex md:items-center md:space-x-2 lg:space-x-3`}
-              >
-                <TradeNavMenu />
-                <MenuItem href="/account">{t('account')}</MenuItem>
+              > 
+                {/* <MenuItem href="/account">{t('account')}</MenuItem>
                 <MenuItem href="/markets">{t('markets')}</MenuItem>
                 <MenuItem href="/borrow">{t('borrow')}</MenuItem>
                 <MenuItem href="/swap">{t('swap')}</MenuItem>
@@ -122,39 +100,18 @@ const TopBar = () => {
                       />,
                     ],
                   ]}
-                />
+                /> */}
               </div>
             </div>
             <div className="flex items-center space-x-2.5">
-              {isDevnet ? <div className="pl-2 text-xxs">Devnet</div> : null}
               <div className="pl-2">
                 <Settings />
-              </div>
-              {mangoAccount &&
-              mangoAccount.owner.toBase58() === publicKey?.toBase58() ? (
-                <button
-                  className="rounded border border-th-bkg-4 py-1 px-2 text-xs hover:border-th-fgd-4 focus:outline-none"
-                  onClick={() => setShowAccountsModal(true)}
-                >
-                  <div className="text-xs font-normal text-th-primary">
-                    {t('account')}
-                  </div>
-                  {mangoAccount.name
-                    ? mangoAccount.name
-                    : abbreviateAddress(mangoAccount.publicKey)}
-                </button>
-              ) : null}
+              </div> 
               <ConnectWalletButton />
             </div>
           </div>
         </div>
-      </nav>
-      {showAccountsModal && (
-        <AccountsModal
-          onClose={handleCloseAccounts}
-          isOpen={showAccountsModal}
-        />
-      )}
+      </nav> 
     </>
   )
 }

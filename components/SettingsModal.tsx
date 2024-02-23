@@ -22,13 +22,10 @@ require('dayjs/locale/zh-tw')
 
 const NODE_URLS = [
   { label: 'Triton (RPC Pool)', value: 'https://mango.rpcpool.com' },
+   
   {
-    label: 'Genesys Go',
-    value: 'https://mango.genesysgo.net/',
-  },
-  {
-    label: 'Project Serum',
-    value: 'https://solana-api.projectserum.com/',
+    label: 'Project Solana',
+    value: 'https://api.mainnet-beta.solana.com',
   },
   { label: 'Custom', value: '' },
 ]
@@ -109,16 +106,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
       </Modal.Header>
       {!settingsView ? (
         <div className="border-b border-th-bkg-4">
-          <button
-            className="default-transition flex w-full items-center justify-between rounded-none border-t border-th-bkg-4 py-3 font-normal text-th-fgd-1 hover:text-th-primary focus:outline-none"
-            onClick={() => setSettingsView('Default Market')}
-          >
-            <span>{t('default-market')}</span>
-            <div className="flex items-center text-xs text-th-fgd-3">
-              {defaultMarket.name}
-              <ChevronRightIcon className="ml-1 h-5 w-5 text-th-fgd-1" />
-            </div>
-          </button>
+          
           <button
             className="default-transition flex w-full items-center justify-between rounded-none border-t border-th-bkg-4 py-3 font-normal text-th-fgd-1 hover:text-th-primary focus:outline-none"
             onClick={() => setSettingsView('Theme')}
@@ -150,22 +138,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
               {rpcEndpoint?.label}
               <ChevronRightIcon className="ml-1 h-5 w-5 text-th-fgd-1" />
             </div>
-          </button>
-          <div className="flex items-center justify-between border-t border-th-bkg-4 py-3 text-th-fgd-1">
-            <span>{t('orderbook-animation')}</span>
-            <Switch
-              checked={showOrderbookFlash}
-              onChange={(checked) => setShowOrderbookFlash(checked)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between border-t border-th-bkg-4 py-3 text-th-fgd-1">
-            <span>{t('default-spot-margin')}</span>
-            <Switch
-              checked={defaultSpotMargin}
-              onChange={(checked) => setDefaultSpotMargin(checked)}
-            />
-          </div>
+          </button> 
         </div>
       ) : null}
       <SettingsContent

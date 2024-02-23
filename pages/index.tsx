@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import useMangoStore, { serumProgramId } from '../stores/useMangoStore'
 import {
@@ -14,14 +14,18 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import IntroTips, { SHOW_TOUR_KEY } from '../components/IntroTips'
 import { useViewport } from '../hooks/useViewport'
 import { breakpoints } from '../components/TradePageGrid'
-import {
-  actionsSelector,
-  mangoAccountSelector,
-  marketConfigSelector,
-} from '../stores/selectors'
-import { PublicKey } from '@solana/web3.js'
+import type { ExpandableConfig, TableRowSelection } from 'antd/es/table/interface';
+
 import FavoritesShortcutBar from '../components/FavoritesShortcutBar'
 import { useWallet } from '@solana/wallet-adapter-react'
+import PageBodyContainer from 'components/PageBodyContainer'
+import Button from 'components/Button'
+import { Card,Table, TableProps } from 'antd';
+import { Label } from '../components/Input';
+import AccountsModal from 'components/AccountsModal'
+import CloggerCountsModal from 'components/CloggerCountsModal'
+import { size } from 'lodash'
+import { Keypair } from '@solana/web3.js'
 
 export async function getStaticProps({ locale }) {
   return {
@@ -36,122 +40,119 @@ export async function getStaticProps({ locale }) {
   }
 }
 
-const PerpMarket: React.FC = () => {
-  const [alphaAccepted] = useLocalStorageState(ALPHA_MODAL_KEY, false)
-  const [showTour] = useLocalStorageState(SHOW_TOUR_KEY, false)
-  const { connected } = useWallet()
-  const groupConfig = useMangoStore((s) => s.selectedMangoGroup.config)
-  const setMangoStore = useMangoStore((s) => s.set)
-  const mangoAccount = useMangoStore(mangoAccountSelector)
-  const mangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
-  const marketConfig = useMangoStore(marketConfigSelector)
-  const actions = useMangoStore(actionsSelector)
-  const router = useRouter()
-  const { pubkey } = router.query
-  const { width } = useViewport()
-  const hideTips = width ? width < breakpoints.md : false
+const Index: React.FC = () => { 
+  const { connected ,wallet,publicKey} = useWallet() 
+  const [showAccountsModal, setShowAccountsModal] = useState(false)
 
-  useEffect(() => {
-    async function loadUnownedMangoAccount() {
-      if (!pubkey) return
-      try {
-        const unownedMangoAccountPubkey = new PublicKey(pubkey)
-        const mangoClient = useMangoStore.getState().connection.client
-        if (mangoGroup) {
-          const unOwnedMangoAccount = await mangoClient.getMangoAccount(
-            unownedMangoAccountPubkey,
-            serumProgramId
-          )
+  const [accounts,setAccounts]=useState([]);
+  const defaultTitle = () => '';
+  const defaultFooter = () => '';
+  const [bottom, setBottom] = useState<TablePaginationPosition>('bottomRight');
 
-          setMangoStore((state) => {
-            state.selectedMangoAccount.current = unOwnedMangoAccount
-            state.selectedMangoAccount.initialLoad = false
-          })
-          actions.fetchTradeHistory()
-          actions.reloadOrders()
-          // setResetOnLeave(true)
-        }
-      } catch (error) {
-        router.push('/account')
-      }
-    }
 
-    if (pubkey) {
-      loadUnownedMangoAccount()
-    }
-  }, [pubkey, mangoGroup])
+  const handleCloseAccounts = useCallback(() => {
+    setShowAccountsModal(false)
+  }, [])
 
-  useEffect(() => {
-    const name = decodeURIComponent(router.asPath).split('name=')[1]
-    const mangoGroup = useMangoStore.getState().selectedMangoGroup.current
+  const generateWallets = useCallback((count:number) => {
+    const newWallets :any = []; 
+    for (let i = 0; i < count; i++) {
+      const keypair = Keypair.generate();
+      newWallets.push({
+        publicKey: keypair.publicKey.toBase58(),
+        privateKey: keypair.secretKey,
+        balance:0
+      });
+    } 
+    setAccounts(newWallets); 
+  }, [accounts])
 
-    let marketQueryParam, marketBaseSymbol, marketType, newMarket, marketIndex
-    if (name && groupConfig) {
-      marketQueryParam = name.toString().split(/-|\//)
-      marketBaseSymbol = marketQueryParam[0]
-      marketType = marketQueryParam[1].includes('PERP') ? 'perp' : 'spot'
-
-      newMarket = getMarketByBaseSymbolAndKind(
-        groupConfig,
-        marketBaseSymbol.toUpperCase(),
-        marketType
-      )
-      marketIndex = getMarketIndexBySymbol(
-        groupConfig,
-        marketBaseSymbol.toUpperCase()
-      )
-
-      if (!newMarket?.baseSymbol) {
-        router.push('/')
-        return
-      }
-    }
-
-    if (newMarket?.name === marketConfig?.name) return
-
-    if (name && mangoGroup) {
-      const mangoCache = useMangoStore.getState().selectedMangoGroup.cache
-      setMangoStore((state) => {
-        state.selectedMarket.kind = marketType
-        if (newMarket.name !== marketConfig.name) {
-          // state.selectedMarket.current = null
-          state.selectedMarket.config = newMarket
-          state.tradeForm.price =
-            state.tradeForm.tradeType === 'Limit' && mangoCache
-              ? parseFloat(
-                  mangoGroup.getPrice(marketIndex, mangoCache).toFixed(2)
-                )
-              : ''
-        }
-      })
-    } else if (name && marketConfig) {
-      // if mangoGroup hasn't loaded yet, set the marketConfig to the query param if different
-      if (newMarket.name !== marketConfig.name) {
-        setMangoStore((state) => {
-          state.selectedMarket.kind = marketType
-          state.selectedMarket.config = newMarket
-        })
-      }
-    }
-  }, [router, marketConfig])
-
+  const columns = [
+    {
+      title: 'Address',
+      dataIndex: 'publicKey',
+      key: 'publicKey',
+    },
+    {
+      title: 'Balance (SOL)',
+      dataIndex: 'balance',
+      key: 'balance',
+    },
+    {
+      title: 'Action',
+      dataIndex: '',
+      key: 'x',
+      render: () => <Button>Sell</Button>,
+    },
+  ];
+  type TablePaginationPosition =
+  | 'topLeft'
+  | 'topCenter'
+  | 'topRight'
+  | 'bottomLeft'
+  | 'bottomCenter'
+  | 'bottomRight';
+  interface DataType {
+    key: number;
+    name: string;
+    age: number;
+    address: string;
+    description: string;
+  }
+  const tableProps: TableProps<DataType> = {
+    bordered:true,
+    loading:false,
+    size:'small',
+    expandable:undefined,
+    title: defaultTitle,
+    showHeader:true,
+    footer: defaultFooter, 
+    tableLayout:'fixed',
+  };
+  
   return (
     <>
       <div className={`bg-th-bkg-1 text-th-fgd-1 transition-all`}>
-        {showTour && !hideTips ? (
-          <IntroTips connected={connected} mangoAccount={mangoAccount} />
-        ) : null}
         <TopBar />
-        <FavoritesShortcutBar />
-        <PageBodyWrapper className="p-1 sm:px-2 sm:py-1 md:px-2 md:py-1 xl:px-4">
-          <TradePageGrid />
-        </PageBodyWrapper>
-        {!alphaAccepted && (
-          <AlphaModal isOpen={!alphaAccepted} onClose={() => {}} />
-        )}
+        <PageBodyContainer>
+          <div className="py-4 md:pb-4 md:pt-10">
+            <h1 className={`mb-1`}>Clogger Wallets</h1>
+            <div className="flex flex-col items-start sm:flex-row">
+              <p className="mb-0 mr-2">Generate and Manage Clogger Wallets</p>
+            </div>
+          </div>
+          {connected && 
+             <Card title="Wallets" size="small"  style={{width:'100%'}}  extra={ 
+              <>
+              <Button  onClick={() => setShowAccountsModal(true)}>Generate</Button> &nbsp; &nbsp; &nbsp;
+              <Button>Random Deposit</Button> &nbsp; &nbsp; &nbsp;
+              <Button>Reset</Button> &nbsp; &nbsp; &nbsp;
+              </>
+             }> 
+
+             {accounts && accounts.length>0 ? 
+             <> 
+             <Table
+              {...tableProps}
+              pagination={{ position: [bottom] }}
+              columns={columns}
+              dataSource={accounts}
+             />
+             </>:
+             <>
+             </>}
+            </Card> }
+        </PageBodyContainer>
       </div>
+      {showAccountsModal ? (
+        <CloggerCountsModal
+          onClose={handleCloseAccounts}
+          isOpen={showAccountsModal}
+          generate={generateWallets}
+        />
+      ) : null}
     </>
   )
 }
 
-export default PerpMarket
+export default Index
