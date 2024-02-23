@@ -1,7 +1,5 @@
 import React from 'react'
-import { FiveOhFive } from './FiveOhFive'
-import * as Sentry from '@sentry/react'
-
+  
 const ErrorBoundary: React.FC<any> = (props) => {
   const postError = (error, componentStack) => {
     if (process.env.NEXT_PUBLIC_ERROR_WEBHOOK_URL) {
@@ -20,15 +18,9 @@ const ErrorBoundary: React.FC<any> = (props) => {
   }
 
   return (
-    <Sentry.ErrorBoundary
-      fallback={({ error, componentStack }) => {
-        postError(error, componentStack)
-
-        return <FiveOhFive error={error} />
-      }}
-    >
+    <>
       {props.children}
-    </Sentry.ErrorBoundary>
+    </>
   )
 }
 
